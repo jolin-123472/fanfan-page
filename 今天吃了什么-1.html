@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>今天吃了什么？</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', '幼圆', sans-serif;
+      background-color: #ffeef3;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      color: #e95b78;
+      margin-top: 20px;
+    }
+    .meal-list {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .meal-card {
+      background-color: #fff5f8;
+      border-radius: 16px;
+      border: 2px dashed #ffc1cc;
+      padding: 15px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    }
+    .meal-card img {
+      width: 100%;
+      max-height: 160px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .meal-card .name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ff6b81;
+    }
+    .meal-card .date, .meal-card .notes {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+    #add-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #a0e0d8;
+      color: white;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 30px;
+      font-size: 16px;
+      box-shadow: 2px 4px 10px rgba(0,0,0,0.2);
+    }
+    .popup {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+    }
+    .popup input, .popup textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 8px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+    .popup button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background-color: #ffa5ba;
+      color: white;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>今天吃了什么？</h1>
+  <div class="meal-list" id="mealList"></div>
+  <button id="add-btn">添加饭饭</button>
+
+  <div class="popup" id="popup">
+    <div class="popup-content">
+      <input type="text" id="mealName" placeholder="菜名" />
+      <textarea id="mealNotes" placeholder="备注"></textarea>
+      <input type="date" id="mealDate" />
+      <input type="file" id="mealImage" accept="image/*" />
+      <button onclick="saveMeal()">保存</button>
+    </div>
+  </div>
+
+  <script>
+    const mealList = document.getElementById('mealList');
+    const popup = document.getElementById('popup');
+    const addBtn = document.getElementById('add-btn');
+
+    addBtn.addEventListener('click', () => popup.style.display = 'flex');
+    popup.addEventListener('click', (e) => { if (e.target === popup) popup.style.display = 'none'; });
+
+    function saveMeal() {
+      const name = document.getElementById('mealName').value;
+      const notes = document.getElementById('mealNotes').value;
+      const date = document.getElementById('mealDate').value;
+      const imageInput = document.getElementById('mealImage');
+      const reader = new FileReader();
+
+      if (!name || !date) return alert('请填写菜名和日期');
+
+      reader.onload = function () {
+        const imageUrl = reader.result;
+        const meal = { name, notes, date, imageUrl };
+        const meals = JSON.parse(localStorage.getItem('meals') || '[]');
+        meals.unshift(meal);
+        localStorage.setItem('meals', JSON.stringify(meals));
+        popup.style.display = 'none';
+        renderMeals();
+      };
+      if (imageInput.files[0]) reader.readAsDataURL(imageInput.files[0]);
+      else {
+        const meal = { name, notes, date, imageUrl: '' };
+        const meals = JSON.parse(localStorage.getItem('meals') || '[]');
+        meals.unshift(meal);
+        localStorage.setItem('meals', JSON.stringify(meals));
+        popup.style.display = 'none';
+        renderMeals();
+      }
+    }
+
+    function renderMeals() {
+      mealList.innerHTML = '';
+      const meals = JSON.parse(localStorage.getItem('meals') || '[]');
+      meals.forEach(meal => {
+        const card = document.createElement('div');
+        card.className = 'meal-card';
+        card.innerHTML = `
+          ${meal.imageUrl ? `<img src="${meal.imageUrl}" alt="meal" />` : ''}
+          <div class="name">${meal.name}</div>
+          <div class="date">${meal.date}</div>
+          <div class="notes">${meal.notes}</div>
+        `;
+        mealList.appendChild(card);
+      });
+    }
+
+    renderMeals();
+  </script>
+</body>
+</html>
